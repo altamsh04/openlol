@@ -1,6 +1,6 @@
-# OpenLol 😆
+# OpenLoL 😆
 
-> Local MCP host — give any AI agent direct safe access to your machine.
+> Open Local Operations Layer — Give any AI agent direct safe access to your machine terminal.
 
 **Status: Under active development. Not yet published to npm.**
 

@@ -14,12 +14,23 @@ const pkg = {
 // ─── Banner ──────────────────────────────────────────────────────────────────
 
 function printBanner(): void {
+  const C = chalk.bold.cyan;
   console.log();
-  console.log(chalk.bold.cyan("  ╔═══════════════════════════════════════╗"));
-  console.log(chalk.bold.cyan("  ║") + chalk.bold.white("         openlol — local MCP host       ") + chalk.bold.cyan("║"));
-  console.log(chalk.bold.cyan("  ╚═══════════════════════════════════════╝"));
+  console.log(C("   ██████╗ ██████╗ ███████╗███╗   ██╗██╗      ██████╗ ██╗"));
+  console.log(C("  ██╔═══██╗██╔══██╗██╔════╝████╗  ██║██║     ██╔═══██╗██║"));
+  console.log(C("  ██║   ██║██████╔╝█████╗  ██╔██╗ ██║██║     ██║   ██║██║"));
+  console.log(C("  ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██║     ██║   ██║██║"));
+  console.log(C("  ╚██████╔╝██║     ███████╗██║ ╚████║███████╗╚██████╔╝███████╗"));
+  console.log(C("   ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚══════╝"));
+  console.log();
+  console.log(
+    "  " + chalk.bold.white("Your machine, as an MCP server.") +
+    "  " + chalk.dim(`v${pkg.version}`)
+  );
   console.log();
 }
+
+// ─── Connection info ──────────────────────────────────────────────────────────
 
 function printConnectionInfo(opts: {
   host: string;
@@ -27,7 +38,7 @@ function printConnectionInfo(opts: {
   token: string;
   folder: string;
 }): void {
-  const base = `http://${opts.host}:${opts.port}`;
+  const base   = `http://${opts.host}:${opts.port}`;
   const mcpUrl = `${base}/mcp?token=${opts.token}`;
   const sseUrl = `${base}/sse?token=${opts.token}`;
 
@@ -46,19 +57,12 @@ function printConnectionInfo(opts: {
   console.log(chalk.bold("  Health check:"));
   console.log("  " + chalk.cyan.underline(`${base}/health`));
   console.log();
-  console.log(chalk.bold.white("  ─── Claude Desktop config (claude_desktop_config.json) ─"));
+  console.log(chalk.bold.white("  ─── Cursor config (.cursor/mcp.json) ───────────────────"));
   console.log();
   console.log(
     chalk.gray(
       JSON.stringify(
-        {
-          mcpServers: {
-            openlol: {
-              url: mcpUrl,
-              transport: "http",
-            },
-          },
-        },
+        { mcpServers: { openlol: { url: mcpUrl, transport: "http" } } },
         null,
         4
       )
@@ -80,9 +84,10 @@ program
   .name(pkg.name)
   .version(pkg.version)
   .description(pkg.description)
-  .requiredOption(
+  .argument("[path]", "Folder to expose (defaults to current directory)")
+  .option(
     "-f, --folder <path>",
-    "Path to the folder you want to expose to AI agents"
+    "Folder to expose to AI agents (alternative to positional argument)"
   )
   .option(
     "-p, --port <number>",
@@ -96,19 +101,17 @@ program
       return n;
     }
   )
-  .option(
-    "--host <host>",
-    "Host to bind to (default: localhost)",
-    "localhost"
-  )
-  .action(async (options) => {
+  .option("--host <host>", "Host to bind to (default: localhost)", "localhost")
+  .action(async (arg, options) => {
     printBanner();
 
-    let config;
+    // Resolution order: positional arg → -f flag → current directory
+    const folderPath = arg ?? options.folder ?? process.cwd();
 
+    let config;
     try {
       config = buildServerConfig({
-        folderPath: options.folder,
+        folderPath,
         port: options.port,
         host: options.host,
       });
@@ -119,7 +122,6 @@ program
     }
 
     let server;
-
     try {
       server = await startServer(config);
     } catch (err) {
@@ -135,7 +137,6 @@ program
       folder: config.folderPath,
     });
 
-    // ── Graceful shutdown ───────────────────────────────────────────────────
     const shutdown = async (signal: string): Promise<void> => {
       console.log();
       console.log(chalk.dim(`  Received ${signal}. Shutting down...`));
@@ -148,7 +149,7 @@ program
       process.exit(0);
     };
 
-    process.on("SIGINT", () => shutdown("SIGINT"));
+    process.on("SIGINT",  () => shutdown("SIGINT"));
     process.on("SIGTERM", () => shutdown("SIGTERM"));
   });
 

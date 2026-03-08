@@ -1,6 +1,6 @@
 {
   "name": "openlol",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local MCP server that exposes your machine to AI agents via terminal tools",
   "main": "dist/cli.js",
   "bin": {

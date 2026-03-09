@@ -17,12 +17,14 @@ No cloud. No relay. Your machine, your folder, your token.
 ## Quick start
 
 ```bash
-# Clone and install
-git clone https://github.com/altamsh04/openlol
-cd openlol && npm install && npm run build && npm link
+# Recommended: install globally
+npm i -g openlol
 
-# Start the server
-openlol -f /path/to/your/folder
+# Or install locally
+npm i openlol
+
+# Expose the current folder
+openlol .
 ```
 
 ---
@@ -32,7 +34,8 @@ openlol -f /path/to/your/folder
 
 | Flag                  | Description                     | Default     |
 | --------------------- | ------------------------------- | ----------- |
-| `-f, --folder <path>` | Folder to expose **(required)** | —           |
+| `[path]`              | Folder to expose (positional)   | `.`         |
+| `-f, --folder <path>` | Folder to expose (alternative to `[path]`) | —           |
 | `-p, --port <number>` | Port to listen on               | `3333`      |
 | `--host <host>`       | Host to bind to                 | `localhost` |
 

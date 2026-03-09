@@ -4,6 +4,7 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { v4 as uuidv4 } from "uuid";
 import { createMcpServer } from "./mcp.js";
+import { logger } from "../logger.js";
 import type { ServerConfig } from "../types/index.js";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -101,15 +102,17 @@ export function createHttpServer(config: ServerConfig): express.Application {
 
         const mcpServer = createMcpServer(config.folderPath);
         streamableSessions.set(newSessionId, { transport });
+        logger.connect("streamable", newSessionId);
 
         transport.onclose = () => {
           streamableSessions.delete(newSessionId);
+          logger.disconnect("streamable", newSessionId);
         };
 
         await mcpServer.connect(transport);
         await transport.handleRequest(req, res, req.body);
       } catch (err) {
-        console.error("[openlol] Streamable HTTP error:", err);
+        logger.error("streamable", err);
         if (!res.headersSent) {
           res.status(500).json({ error: "Internal server error" });
         }
@@ -135,7 +138,7 @@ export function createHttpServer(config: ServerConfig): express.Application {
       try {
         await session.transport.handleRequest(req, res, req.body);
       } catch (err) {
-        console.error("[openlol] Streamable HTTP GET error:", err);
+        logger.error("streamable/get", err);
         if (!res.headersSent) res.status(500).json({ error: "Internal server error" });
       }
     }
@@ -172,14 +175,16 @@ export function createHttpServer(config: ServerConfig): express.Application {
 
         const mcpServer = createMcpServer(config.folderPath);
         sseSessions.set(sessionId, { transport });
+        logger.connect("sse", sessionId);
 
         res.on("close", () => {
           sseSessions.delete(sessionId);
+          logger.disconnect("sse", sessionId);
         });
 
         await mcpServer.connect(transport);
       } catch (err) {
-        console.error("[openlol] SSE connection error:", err);
+        logger.error("sse", err);
         if (!res.headersSent) {
           res.status(500).json({ error: "Failed to establish SSE connection" });
         }
@@ -210,7 +215,7 @@ export function createHttpServer(config: ServerConfig): express.Application {
       try {
         await session.transport.handlePostMessage(req, res, req.body);
       } catch (err) {
-        console.error("[openlol] SSE message error:", err);
+        logger.error("sse/message", err);
         if (!res.headersSent) {
           res.status(500).json({ error: "Failed to process message" });
         }

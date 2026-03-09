@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "../logger.js";
 import { executeCommand } from "./terminal.js";
 import {
   readFile,
@@ -253,14 +254,15 @@ export async function dispatchTool(
   args: unknown,
   rootFolder: string
 ): Promise<ToolCallResult> {
-  const ok = (text: string): ToolCallResult => ({
-    content: [{ type: "text", text }],
-  });
+  const ok = (text: string): ToolCallResult => {
+    logger.tool(toolName, args, true, text);
+    return { content: [{ type: "text", text }] };
+  };
 
-  const err = (text: string): ToolCallResult => ({
-    content: [{ type: "text", text }],
-    isError: true,
-  });
+  const err = (text: string): ToolCallResult => {
+    logger.tool(toolName, args, false, text);
+    return { content: [{ type: "text", text }], isError: true };
+  };
 
   try {
     switch (toolName) {

@@ -7,7 +7,7 @@ import { startServer } from "./server/index.js";
 
 const pkg = {
   name: "openlol",
-  version: "1.0.0",
+  version: "1.1.2",
   description: "Local MCP server — give AI agents access to your machine",
 };
 
@@ -73,6 +73,8 @@ function printConnectionInfo(opts: {
   );
   console.log();
   console.log(chalk.dim("  Press Ctrl+C to stop the server."));
+  console.log();
+  console.log(chalk.dim("  ─── Logs ") + chalk.dim("─".repeat(44)));
   console.log();
 }
 
